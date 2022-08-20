@@ -1,183 +1,140 @@
 package com.kukki.canvas.ui.screen
 
-
+import android.graphics.Bitmap
 import android.view.MotionEvent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.*
+import android.view.View
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInteropFilter
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kukki.canvas.ui.component.horizontalGradientBackground
+import com.kukki.canvas.ui.component.ColorPicker
+import com.kukki.canvas.ui.component.ControlsBar
+import com.kukki.canvas.ui.component.SubtitleText
 import com.kukki.canvas.ui.theme.CanvasTheme
 import com.kukki.canvas.ui.theme.Purple200
-import com.kukki.canvas.ui.theme.graySurface
-import com.kukki.canvas.ui.utils.ColorPicker
-import com.kukki.canvas.ui.utils.PaintDataProvider
+import com.kukki.canvas.ui.theme.WhiteLite
+import kotlinx.coroutines.launch
+
+@Composable
+fun viewToBitmap(view: View): Bitmap? {
+    return Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+}
 
 @Composable
 fun PaintApp() {
-    val showBrushes = remember { mutableStateOf(false) }
-    val showColorPicker = remember { mutableStateOf(false) }
+    val showStrokeSelector = remember { mutableStateOf(false) }
+    val showBgColorPicker = remember { mutableStateOf(false) }
+    val showBrushColorPicker = remember { mutableStateOf(false) }
 
-    val drawBrush = remember { mutableStateOf(5f) }
+    val strokeWidth = remember { mutableStateOf(1f) }
     val usedColors = remember { mutableStateOf(mutableSetOf(Color.Black, Color.White, Color.Gray)) }
     // on every change of brush or color start a new path and save old one in list
 
     val drawColor = remember { mutableStateOf(Color.Black) }
-    val bgColor = Purple200
+    val bgColor = remember { mutableStateOf(WhiteLite) }
+    val topBgColor = Purple200
 
-    CanvasTheme(darkTheme = false) {
-        val paths = rememberPathStateList()
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = bgColor,
-                    title = {
-                        Text(modifier = Modifier.fillMaxWidth(), text = "Canvas", textAlign = TextAlign.Center)
-                    },
-                    actions = {
+    val sheetState: ModalBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val paths = rememberPathStateList()
+    val coroutineScope = rememberCoroutineScope()
 
-                    }
-                )
-            },
-            content = {
-                Column {
-                    if (showColorPicker.value) {
-                        //show wheel picker in dialog box
-                        ColorPicker(
-                            onColorSelected = { color ->
-                                drawColor.value = color
-                            })
+    ModalBottomSheetLayout(
+        sheetState = sheetState,
+        sheetContent = {
+            if (showStrokeSelector.value) {
+                Column(
+                    modifier = Modifier
+                        .height(100.dp)
+                        .fillMaxWidth()
+                ) {
+                    SubtitleText(subtitle = "Stroke Width ${strokeWidth.value.toInt()}")
 
-                        UsedColorSelectionRowView(usedColors, drawColor)
-                    }
-
-                    paths.value.add(PathState(path = Path(), color = drawColor.value, stroke = drawBrush.value))
-
-                    Box {
-                        DrawingCanvas(drawColor, drawBrush, usedColors, paths.value)
-                        DrawingTools(showBrushes, drawBrush, usedColors.value)
-                    }
+                    Slider(
+                        value = strokeWidth.value,
+                        onValueChange = {
+                            strokeWidth.value = it
+                        },
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .fillMaxWidth(),
+//                        steps = 20,
+                        valueRange = 1f..50f,
+                    )
                 }
 
-            },
-            bottomBar = {
-                BottomAppBar(backgroundColor = bgColor) {
-                    val modifier = Modifier
-                        .weight(0.1f)
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-
-
-                        BottomBarButtonView(
-                            modifier = modifier,
-                            icon = Icons.Default.Brush,
-                            label = "Stroke width",
-                            onClick = {
-                                showBrushes.value = !showBrushes.value
-                            })
-
-
-                        BottomBarButtonView(
-                            modifier = modifier,
-                            icon = Icons.Default.Colorize,
-                            label = "Pick Color",
-                            onClick = {
-                                showColorPicker.value = !showColorPicker.value
-                            })
-
-
-                        BottomBarButtonView(
-                            modifier = modifier,
-                            icon = Icons.Default.Save,
-                            label = "Save",
-                            onClick = {
-
-                            })
-
-                        BottomBarButtonView(
-                            modifier = modifier,
-                            icon = Icons.Default.Delete,
-                            label = "Delete",
-                            onClick = {
-                                paths.value = mutableListOf()
-                            })
-                    }
-                }
+            } else {
+                ColorPicker(showBgColorPicker, bgColor, drawColor)
             }
-        )
-    }
-}
-
-@Composable
-private fun BottomBarButtonView(modifier: Modifier, icon: ImageVector, label: String, onClick: () -> Unit) {
-    IconButton(
-        modifier = modifier,
-        onClick = {
-            onClick()
         },
         content = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    tint = Color.White,
-                    modifier = Modifier.padding(bottom = 2.dp)
-                )
+            Scaffold(
+                backgroundColor = bgColor.value,
+                topBar = {
+                    TopAppBar(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = topBgColor,
+                        title = {
+                            Text(modifier = Modifier.fillMaxWidth(), text = "Canvas", textAlign = TextAlign.Center)
+                        },
+                        actions = {
 
-                Text(
-                    modifier = Modifier.padding(top = 2.dp),
-                    text = label,
-                    color = Color.White
-                )
-            }
-        })
-}
+                        }
+                    )
+                },
+                content = {
+                    paths.value.add(PathState(path = Path(), color = drawColor.value, stroke = strokeWidth.value))
+                    DrawingCanvas(drawColor, strokeWidth, usedColors, paths.value)
 
-@Composable
-private fun UsedColorSelectionRowView(usedColors: MutableState<MutableSet<Color>>, drawColor: MutableState<Color>) {
-    Row(
-        modifier = Modifier
-            .horizontalGradientBackground(listOf(graySurface, Color.Black))
-            .padding(horizontal = 8.dp, vertical = 4.dp)
-            .horizontalScroll(rememberScrollState())
-            .animateContentSize()
-    ) {
-        usedColors.value.forEach {
-            Icon(
-                imageVector = Icons.Default.Bookmark,
-                contentDescription = null,
-                tint = it,
-                modifier = Modifier
-                    .padding(8.dp)
-                    .clickable {
-                        drawColor.value = it
+                },
+                bottomBar = {
+                    BottomAppBar(backgroundColor = topBgColor) {
+
+                        ControlsBar(
+                            onDownloadClick = {
+
+                            },
+                            onColorClick = {
+                                showBrushColorPicker.value = !(showBrushColorPicker.value)
+                                coroutineScope.launch {
+                                    sheetState.show()
+                                }
+                            },
+                            onBgColorClick = {
+                                showBgColorPicker.value = !(showBgColorPicker.value)
+                                coroutineScope.launch {
+                                    sheetState.show()
+                                }
+                            },
+                            onSizeClick = {
+                                showStrokeSelector.value = true
+                                coroutineScope.launch {
+                                    sheetState.show()
+                                }
+                            },
+                            onClearClick = {
+                                paths.value = mutableListOf()
+
+                                bgColor.value = WhiteLite
+                                drawColor.value = Color.Black
+                            },
+                            colorValue = drawColor,
+                            bgColorValue = bgColor,
+                        )
                     }
+
+                }
             )
-        }
-    }
+        },
+    )
 }
 
 @Composable
@@ -222,39 +179,6 @@ fun DrawingCanvas(drawColor: MutableState<Color>, drawBrush: MutableState<Float>
         })
 }
 
-
-@Composable
-fun DrawingTools(showBrushes: MutableState<Boolean>, drawBrush: MutableState<Float>, usedColors: MutableSet<Color>) {
-    val strokes = remember { PaintDataProvider.strokeList }
-
-    Column(modifier = Modifier.padding(horizontal = 8.dp)) {
-
-        AnimatedVisibility(visible = showBrushes.value) {
-            LazyColumn {
-                items(strokes) {
-                    IconButton(
-                        onClick = {
-                            drawBrush.value = it.toFloat()
-                            showBrushes.value = false
-                        },
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .border(
-                                border = BorderStroke(
-                                    width = with(LocalDensity.current) { it.toDp() },
-                                    color = Color.Gray
-                                ),
-                                shape = CircleShape
-                            )
-                    ) {
-
-                    }
-                }
-            }
-        }
-    }
-}
-
 @Composable
 fun rememberPathStateList() = remember { mutableStateOf(mutableListOf<PathState>()) }
 
@@ -262,7 +186,7 @@ fun rememberPathStateList() = remember { mutableStateOf(mutableListOf<PathState>
 @Composable
 fun DrawingToolsPreview() {
     CanvasTheme {
-//        PaintApp()
+        PaintApp()
     }
 
 }

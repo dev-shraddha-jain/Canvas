@@ -1,4 +1,4 @@
-package com.kukki.canvas
+package com.kukki.canvas.ui.component
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme.typography

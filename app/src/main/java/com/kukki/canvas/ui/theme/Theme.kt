@@ -1,10 +1,13 @@
 package com.kukki.canvas.ui.theme
 
+import android.view.Window
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.toArgb
+import androidx.core.view.WindowInsetsControllerCompat
 
 private val DarkColorPalette = darkColors(
     primary = Purple200,
@@ -44,4 +47,12 @@ fun CanvasTheme(
         shapes = Shapes,
         content = content
     )
+}
+
+
+@Composable
+fun Window.StatusBarConfig(darkTheme: Boolean) {
+    WindowInsetsControllerCompat(this, this.decorView).isAppearanceLightStatusBars =
+        !darkTheme
+    this.statusBarColor = MaterialTheme.colors.background.toArgb()
 }
