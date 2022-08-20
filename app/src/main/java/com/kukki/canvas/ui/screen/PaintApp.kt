@@ -4,13 +4,11 @@ import android.graphics.Bitmap
 import android.view.MotionEvent
 import android.view.View
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -20,10 +18,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kukki.canvas.ui.component.ColorPicker
 import com.kukki.canvas.ui.component.ControlsBar
+import com.kukki.canvas.ui.component.StatusBarColor
 import com.kukki.canvas.ui.component.SubtitleText
-import com.kukki.canvas.ui.theme.CanvasTheme
-import com.kukki.canvas.ui.theme.WhiteLite
-import com.kukki.canvas.ui.theme.graySurface
+import com.kukki.canvas.ui.theme.*
 import kotlinx.coroutines.launch
 
 @Composable
@@ -43,11 +40,13 @@ fun PaintApp() {
 
     val drawColor = remember { mutableStateOf(Color.Black) }
     val bgColor = remember { mutableStateOf(WhiteLite) }
-    val topBgColor = graySurface
+    val topBgColor = Purple50
 
     val sheetState: ModalBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val paths = rememberPathStateList()
     val coroutineScope = rememberCoroutineScope()
+
+    StatusBarColor(topBgColor)
 
     ModalBottomSheetLayout(
         sheetState = sheetState,
@@ -86,11 +85,11 @@ fun PaintApp() {
         },
         content = {
             Scaffold(
-                backgroundColor = bgColor.value,
                 topBar = {
                     TopAppBar(
                         modifier = Modifier
                             .fillMaxWidth(),
+                        backgroundColor = topBgColor,
                         title = {
                             Text(modifier = Modifier.fillMaxWidth(), text = "Canvas", textAlign = TextAlign.Center)
                         },
