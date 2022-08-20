@@ -4,11 +4,13 @@ import android.graphics.Bitmap
 import android.view.MotionEvent
 import android.view.View
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -20,8 +22,8 @@ import com.kukki.canvas.ui.component.ColorPicker
 import com.kukki.canvas.ui.component.ControlsBar
 import com.kukki.canvas.ui.component.SubtitleText
 import com.kukki.canvas.ui.theme.CanvasTheme
-import com.kukki.canvas.ui.theme.Purple200
 import com.kukki.canvas.ui.theme.WhiteLite
+import com.kukki.canvas.ui.theme.graySurface
 import kotlinx.coroutines.launch
 
 @Composable
@@ -35,13 +37,13 @@ fun PaintApp() {
     val showBgColorPicker = remember { mutableStateOf(false) }
     val showBrushColorPicker = remember { mutableStateOf(false) }
 
-    val strokeWidth = remember { mutableStateOf(1f) }
+    val strokeWidth = remember { mutableStateOf(5f) }
     val usedColors = remember { mutableStateOf(mutableSetOf(Color.Black, Color.White, Color.Gray)) }
     // on every change of brush or color start a new path and save old one in list
 
     val drawColor = remember { mutableStateOf(Color.Black) }
     val bgColor = remember { mutableStateOf(WhiteLite) }
-    val topBgColor = Purple200
+    val topBgColor = graySurface
 
     val sheetState: ModalBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val paths = rememberPathStateList()
@@ -68,6 +70,13 @@ fun PaintApp() {
                             .fillMaxWidth(),
 //                        steps = 20,
                         valueRange = 1f..50f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = if (drawColor.value == Color.Black) graySurface else drawColor.value,
+                            activeTrackColor = if (drawColor.value == Color.Black) graySurface else drawColor.value,
+                            inactiveTrackColor = Color.Black,
+                            activeTickColor = Color.Black,
+                            inactiveTickColor = Color.Black
+                        )
                     )
                 }
 
@@ -80,8 +89,8 @@ fun PaintApp() {
                 backgroundColor = bgColor.value,
                 topBar = {
                     TopAppBar(
-                        modifier = Modifier.fillMaxWidth(),
-                        backgroundColor = topBgColor,
+                        modifier = Modifier
+                            .fillMaxWidth(),
                         title = {
                             Text(modifier = Modifier.fillMaxWidth(), text = "Canvas", textAlign = TextAlign.Center)
                         },
@@ -93,7 +102,6 @@ fun PaintApp() {
                 content = {
                     paths.value.add(PathState(path = Path(), color = drawColor.value, stroke = strokeWidth.value))
                     DrawingCanvas(drawColor, strokeWidth, usedColors, paths.value)
-
                 },
                 bottomBar = {
                     BottomAppBar(backgroundColor = topBgColor) {
@@ -103,12 +111,16 @@ fun PaintApp() {
 
                             },
                             onColorClick = {
+                                showStrokeSelector.value = false
+                                showBgColorPicker.value = false
                                 showBrushColorPicker.value = !(showBrushColorPicker.value)
                                 coroutineScope.launch {
                                     sheetState.show()
                                 }
                             },
                             onBgColorClick = {
+                                showStrokeSelector.value = false
+                                showBrushColorPicker.value = false
                                 showBgColorPicker.value = !(showBgColorPicker.value)
                                 coroutineScope.launch {
                                     sheetState.show()

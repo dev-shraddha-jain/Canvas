@@ -15,7 +15,7 @@ import io.ak1.rangvikalp.RangVikalp
 
 
 @Composable
- fun ColorPicker(
+fun ColorPicker(
     showBgColorPicker: MutableState<Boolean>,
     bgColor: MutableState<Color>,
     drawColor: MutableState<Color>
@@ -53,7 +53,7 @@ fun ControlsBar(
             desc = "reset",
             colorTint = colorValue.value,
         ) {
-
+            onClearClick()
         }
         MenuItems(
             image = Icons.Outlined.FormatPaint,
