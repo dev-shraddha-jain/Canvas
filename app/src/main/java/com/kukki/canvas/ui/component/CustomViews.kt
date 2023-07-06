@@ -29,28 +29,10 @@ fun StatusBarColor(topBgColor: Color) {
             color = topBgColor,
             darkIcons = useDarkIcons
         )
-
-        // setStatusBarColor() and setNavigationBarColor() also exist
-
         onDispose {}
     }
 
 }
-@Composable
-fun ColorPicker(
-    showBgColorPicker: MutableState<Boolean>,
-    bgColor: MutableState<Color>,
-    drawColor: MutableState<Color>
-) {
-    RangVikalp(isVisible = true, showShades = true) {
-        if (showBgColorPicker.value) {
-            bgColor.value = it
-        } else {
-            drawColor.value = it
-        }
-    }
-}
-
 
 @Composable
 fun ControlsBar(
